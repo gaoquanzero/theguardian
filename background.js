@@ -1,6 +1,6 @@
 (function () {
   chrome.browserAction.onClicked.addListener(function (tab) {
-    chrome.tabs.sendMessage(tab.id, 'Hello');
+    chrome.tabs.sendMessage(tab.id, 'toggle');
   });
 } ());
 

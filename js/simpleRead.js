@@ -1,14 +1,8 @@
 (function () {
-  var READER_VIEW_PAGE_SRC = chrome.runtime.getURL('src/html/view.html');
-
-  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    console.log(request);
-  });
   var Reader = function () {
     this.article = document.querySelector('article');
     this.contentText = [];
   };
-
 
   var NegativeRegEx = /breadcrumb|combx|comment|contact|disqus|foot|footer|footnote|link|media|meta|mod-conversations|promo|related|scroll|share|shoutbox|sidebar|social|sponsor|tags|toolbox|widget/i;
 
@@ -16,21 +10,21 @@
     if (!this.article) {
       return false;
     }
-    this.addWidget();
     this.parseArticle();
     this.render();
   };
 
-  Reader.prototype.addWidget = function () {
-    var widgetDom = document.createElement('div'),
-      widgetRoot = widgetDom.createShadowRoot();
-    var widgetWrap = 'dialog';
-    var $widgetPage = $('<iframe src="' + READER_VIEW_PAGE_SRC + '" name="' + window.location.href + '"></iframe>');
-    $widgetPage.css({
-      'width': '100%',
-      'height': '100%',
-      'border': 'none'
+  Reader.prototype.render = function () {
+    var container = document.createElement('div');
+    $(container).attr({
+      id: 'simple-read-container'
+    }).css({
+      display: 'none'
     });
+
+    var widgetRoot = container.createShadowRoot ? container.createShadowRoot() : container.webkitCreateShadowRoot();
+    var widgetWrap = document.createElement('dialog');
+
     $(widgetWrap).css({
       'position': 'fixed',
       'width': '100%',
@@ -43,28 +37,25 @@
       'padding': 0,
       'border': 'none',
       'margin': 0,
-    }).append($widgetPage);
-    $(widgetRoot).append($(widgetWrap));
-    $('body').append($(widgetDom));
-  };
-
-  Reader.prototype.render = function () {
-    var container = document.createElement('div');
-    container.id = 'simple-read-container';
+      overflow: 'scroll',
+      'overflow-x': 'hidden'
+    });
 
     var header = document.createElement('h1');
     header.textContent = this.header;
-    container.appendChild(header);
+    widgetWrap.appendChild(header);
 
-    container.appendChild(this.mediaContent);
+    widgetWrap.appendChild(this.mediaContent);
 
     var content = document.createElement('div');
 
     content.innerHTML = this.contentText.join('');
 
-    container.appendChild(content);
+    widgetWrap.appendChild(content);
 
-    document.body.appendChild(container);
+    widgetRoot.appendChild(widgetWrap);
+    this.container = $(container);
+    $('body').append($(container));
   };
 
   Reader.prototype.parseArticle = function () {
@@ -92,6 +83,25 @@
     }
 
     return true;
+  };
+
+  Reader.prototype.toggleShow = function(show) {
+    if (!this.container) {
+      return;
+    }
+    if (show) {
+      $('html').css({
+        overflow: 'hidden'
+      });
+
+      this.container.show();
+      return;
+    }
+    $('html').css({
+      overflow: 'auto'
+    });
+
+    this.container.hide();
   };
 
   Reader.prototype.getContents = function (content) {
@@ -131,8 +141,13 @@
   };
 
 
-  // window.addEventListener('load', function () {
-  var reader = new Reader();
-  reader.init();
-  // }, false);
+  window.addEventListener('load', function () {
+    var reader = new Reader();
+    reader.init();
+    var show = false;
+    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+      show = !show;
+      reader.toggleShow(show);
+    });
+  }, false);
 } ());
