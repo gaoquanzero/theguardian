@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "theguardian",
+  "version": "0.1.2",
+  "description": "theguardian",
+  "icons": {
+    "16": "images/icon.png"
+  },
+  "browser_action": {
+    "default_title": "__MSG_iconTips__"
+  },
+  "web_accessible_resources": [
+    "src/html/view.html"
+  ],
+  "permissions": [
+    "tabs"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.theguardian.com/*"
+      ],
+      "js": [
+        "js/jquery-2.1.4.min.js",
+        "js/simpleRead.js"
+      ],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ]
+}
