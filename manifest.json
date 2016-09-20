@@ -13,22 +13,30 @@
     "src/html/view.html"
   ],
   "permissions": [
-    "tabs"
+    "tabs",
+    "https://api.shanbay.com/*",
+    "http://api.shanbay.com/*"
   ],
   "background": {
     "scripts": [
+      "js/jquery-2.1.4.min.js",
       "background.js"
     ],
     "persistent": false
   },
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://api.shanbay.com/; object-src 'self'",
   "content_scripts": [
     {
       "matches": [
         "*://*.theguardian.com/*"
       ],
+      "css": [
+          "css/simpleRead.css"
+      ],
       "js": [
         "js/jquery-2.1.4.min.js",
-        "js/simpleRead.js"
+        "js/simpleRead.js",
+        "js/searchWords.js"
       ],
       "run_at": "document_end",
       "all_frames": true

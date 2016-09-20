@@ -45,7 +45,7 @@
     header.textContent = this.header;
     widgetWrap.appendChild(header);
 
-    widgetWrap.appendChild(this.mediaContent);
+      widgetWrap.appendChild(this.mediaContent);
 
     var content = document.createElement('div');
 
@@ -70,11 +70,15 @@
   };
 
   Reader.prototype.getMediaContent = function () {
-    this.mediaContent = this.article.querySelector('.media-primary');
+    this.mediaContent = this.article.querySelector('.article__img-container picture');
   };
 
   Reader.prototype.shouldKeep = function (node) {
     if (node.innerHTML === '') {
+      return false;
+    }
+
+    if ($.trim(node.textContent) === '') {
       return false;
     }
 
@@ -145,9 +149,9 @@
     var reader = new Reader();
     reader.init();
     var show = false;
-    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-      show = !show;
-      reader.toggleShow(show);
-    });
+    // chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    //   show = !show;
+    //   reader.toggleShow(show);
+    // });
   }, false);
 } ());
