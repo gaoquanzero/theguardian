@@ -2,17 +2,20 @@
   var searchedWords = {};
   var ajax = null;
 
+  var show = false;
+
   chrome.browserAction.onClicked.addListener(function (tab) {
-    chrome.tabs.sendMessage(tab.id, 'toggle');
+    console.log(tab)
+    show = !show;
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'simple',
+      value: show
+    });
   });
 
   chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     switch (request.action) {
       case 'searchWord':
-        // if (!!searchedWords[request.word]) {
-        //   return true;
-        // }
-
         ajax = $.ajax({
           url: 'http://api.shanbay.com/api/v1/bdc/search',
           dataType: 'json',

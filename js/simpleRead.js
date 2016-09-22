@@ -1,6 +1,6 @@
 (function () {
   var Reader = function () {
-    this.article = document.querySelector('article');
+    this.article = $('article');
     this.contentText = [];
   };
 
@@ -15,17 +15,16 @@
   };
 
   Reader.prototype.render = function () {
-    var container = document.createElement('div');
-    $(container).attr({
+    var container = $('<div></div>').attr({
       id: 'simple-read-container'
     }).css({
       display: 'none'
     });
 
-    var widgetRoot = container.createShadowRoot ? container.createShadowRoot() : container.webkitCreateShadowRoot();
-    var widgetWrap = document.createElement('dialog');
-
-    $(widgetWrap).css({
+    var widgetRoot = container.get(0).createShadowRoot ?
+      container.get(0).createShadowRoot() :
+      container.get(0).webkitCreateShadowRoot();
+    var widgetWrap = $('<dialog></dialog>').css({
       'position': 'fixed',
       'width': '100%',
       'height': '100%',
@@ -41,26 +40,40 @@
       'overflow-x': 'hidden'
     });
 
-    var header = document.createElement('h1');
-    header.textContent = this.header;
-    widgetWrap.appendChild(header);
+    $wrapper = $('<div></div>').addClass('wrapper').css({
+      width: '800px',
+      margin: '0 auto',
+      'overflow-x': 'hidden'
+    });
 
-      widgetWrap.appendChild(this.mediaContent);
+    $innerContent = $('<div></div>').addClass('inner-content').appendTo($wrapper);
 
-    var content = document.createElement('div');
+    var header = $('<h1></h1>').addClass('header').text(this.header);
+    $innerContent.append(header);
 
-    content.innerHTML = this.contentText.join('');
+    $innerContent.append($('<img />')
+      .addClass('brief-img')
+      .attr({ src: this.mediaContent })
+      .css({
+        display: 'block',
+        margin: '0 auto'
+      }));
 
-    widgetWrap.appendChild(content);
+    var content = $('<div></div>').addClass('content').html(this.contentText.join(''));
 
-    widgetRoot.appendChild(widgetWrap);
-    this.container = $(container);
-    $('body').append($(container));
+    $innerContent.append(content);
+
+    widgetWrap.append($wrapper);
+
+    widgetRoot.appendChild(widgetWrap.get(0));
+    $('body').append(container);
+    this.container = container;
+    this.$wrapper = $wrapper;
+    this.$innerContent = $innerContent;
   };
 
   Reader.prototype.parseArticle = function () {
-    var content = this.article.querySelector('.content__article-body');
-    this.getHeader();
+    var content = this.article.find('.content__article-body');
     this.getMediaContent();
     this.getContents(content);
   };
@@ -70,7 +83,8 @@
   };
 
   Reader.prototype.getMediaContent = function () {
-    this.mediaContent = this.article.querySelector('.article__img-container picture');
+    var mediaContent = this.article.find('.article__img-container picture img');
+    this.mediaContent = mediaContent.attr('src');
   };
 
   Reader.prototype.shouldKeep = function (node) {
@@ -89,7 +103,7 @@
     return true;
   };
 
-  Reader.prototype.toggleShow = function(show) {
+  Reader.prototype.toggleShow = function (show) {
     if (!this.container) {
       return;
     }
@@ -99,6 +113,9 @@
       });
 
       this.container.show();
+      var pageNums = Math.ceil(this.$wrapper.height() / $(window).height());
+
+
       return;
     }
     $('html').css({
@@ -109,7 +126,7 @@
   };
 
   Reader.prototype.getContents = function (content) {
-    var children = content.childNodes;
+    var children = content.children();
     for (var i = 0; i < children.length; i++) {
       if (this.shouldKeep(children[i])) {
         this.contentText.push(children[i].outerHTML);
@@ -144,14 +161,13 @@
     }
   };
 
-
-  window.addEventListener('load', function () {
+  $(function () {
     var reader = new Reader();
     reader.init();
-    var show = false;
-    // chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    //   show = !show;
-    //   reader.toggleShow(show);
-    // });
-  }, false);
+    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+      if (request && request.action === 'simple') {
+        reader.toggleShow(request.value);
+      }
+    });
+  });
 } ());
